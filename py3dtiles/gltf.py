@@ -37,6 +37,13 @@ class GlTF(object):
                                self.body,
                                padding))
 
+        # return binaryHeader.view(np.uint32).tobytes() + \
+        #        jsonChunkHeader.view(np.uint32).tobytes() + \
+        #        np.frombuffer(scene.encode('utf-8'), dtype=np.uint8).tobytes() + \
+        #        binChunkHeader.view(np.uint32).tobytes() + \
+        #        self.body.view(np.ubyte).tobytes() + \
+        #        padding.tobytes()
+
     @staticmethod
     def from_array(array):
         """
@@ -54,19 +61,25 @@ class GlTF(object):
         if struct.unpack("4s", array[0:4])[0] != b"glTF":
             raise RuntimeError("Array does not contain a binary glTF")
 
-        if struct.unpack("i", array[4:8])[0] != 1:
+        gltf_version = struct.unpack("i", array[4:8])[0]
+        chunk_type = struct.unpack("i", array[16:20])[0]
+
+        if gltf_version == 1:
+            if chunk_type != 0:
+                raise RuntimeError("Unsupported binary glTF content type")
+        elif gltf_version == 2:
+            if hex(chunk_type) != '0x4e4f534a':
+                raise RuntimeError("Unsupported binary glTF content type")
+        else:
             raise RuntimeError("Unsupported glTF version")
 
         length = struct.unpack("i", array[8:12])[0]
-        content_length = struct.unpack("i", array[12:16])[0]
+        chunk_length = struct.unpack("i", array[12:16])[0]
 
-        if struct.unpack("i", array[16:20])[0] != 0:
-            raise RuntimeError("Unsupported binary glTF content type")
-
-        header = struct.unpack(str(content_length) + "s",
-                               array[20:20 + content_length])[0]
+        header = struct.unpack(str(chunk_length) + "s",
+                               array[20:20 + chunk_length])[0]
         glTF.header = json.loads(header.decode("ascii"))
-        glTF.body = array[20 + content_length:length]
+        glTF.body = array[20 + chunk_length:length]
 
         return glTF
 

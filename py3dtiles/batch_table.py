@@ -25,3 +25,27 @@ class BatchTable(object):
         bt_json += ' ' * (4 - len(bt_json) % 4)
         # returns an array of binaries representing the batch table
         return np.fromstring(bt_json, dtype=np.uint8)
+
+    @staticmethod
+    def from_array(th, array):
+        """
+        Parameters
+        ----------
+        th : TileHeader
+
+        array : numpy.array
+
+        Returns
+        -------
+        ft : FeatureTable
+        """
+
+        # build feature table header
+        bth_len = th.bt_json_byte_length
+        bth_arr = array[0:bth_len]
+        jsond = json.loads(bth_arr.tobytes().decode('utf-8'))
+
+        bt = BatchTable()
+        bt.header = jsond
+
+        return bt
