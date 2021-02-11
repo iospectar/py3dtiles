@@ -6,21 +6,20 @@ from setuptools import setup, find_packages
 here = os.path.abspath(os.path.dirname(__file__))
 
 requirements = (
-    'numpy',
+    'numpy>=1.9.0',  # the real requirements is probably higher than that
     'pyproj',
     'cython',
     'triangle',
     'psycopg2-binary',
-    'liblas',
     'laspy',
     'numba',
-    'pyproj',
     'psutil',
     'lz4',
     'pyzmq'
 )
 
 dev_requirements = (
+    'flake8',
     'pytest',
     'pytest-cov',
     'pytest-benchmark',
@@ -30,6 +29,7 @@ dev_requirements = (
 doc_requirements = (
     'sphinx',
     'sphinx_rtd_theme',
+    'sphinx-multiversion',
 )
 
 
@@ -60,14 +60,14 @@ setup(
     version=find_version('py3dtiles', '__init__.py'),
     description="Python module for 3D tiles format",
     long_description=read('README.rst'),
-    url='https://github.com/Oslandia/py3dtiles',
+    url='https://gitlab.com/Oslandia/py3dtiles',
     author='Oslandia',
     author_email='contact@oslandia.com',
     license='Apache License Version 2.0',
+    python_requires='>=3.5',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
     packages=find_packages(),

@@ -96,6 +96,7 @@ class SemanticPoint(Enum):
 class FeatureTableHeader(object):
 
     def __init__(self):
+        # TODO: add all properties
         # point semantics
         self.positions = SemanticPoint.POSITION
         self.positions_offset = 0
@@ -109,17 +110,22 @@ class FeatureTableHeader(object):
         self.normal_offset = 0
         self.normal_dtype = None
 
+        # TODO: add all global semantics
         # global semantics
+        self.instances_length = 0
+        self.east_north_up = 0
+            # it can be BATCH_LENGTH param
         self.points_length = 0
         self.rtc = None
 
     def to_array(self):
         jsond = self.to_json()
         json_str = json.dumps(jsond).replace(" ", "")
-        n = len(json_str) + 28
+        n = len(json_str) + 32
         json_str += ' ' * (4 - n % 4)
         return np.frombuffer(json_str.encode('utf-8'), dtype=np.uint8)
 
+    # TODO: add implementation for all semantics
     def to_json(self):
         jsond = {}
 
@@ -144,6 +150,7 @@ class FeatureTableHeader(object):
 
         return jsond
 
+    # TODO: add implementation for all semantics
     @staticmethod
     def from_dtype(positions_dtype, colors_dtype, npoints):
         """
@@ -219,8 +226,14 @@ class FeatureTableHeader(object):
         fth : FeatureTableHeader
         """
 
-        jsond = json.loads(array.tostring().decode('utf-8'))
+        jsond = json.loads(array.tobytes().decode('utf-8'))
         fth = FeatureTableHeader()
+
+        if "INSTANCES_LENGTH" in jsond:
+            fth.instances_length = jsond["INSTANCES_LENGTH"]
+
+        if "EAST_NORTH_UP" in jsond:
+            fth.east_north_up = jsond["EAST_NORTH_UP"]
 
         # search position
         if "POSITION" in jsond:
@@ -319,11 +332,28 @@ class FeatureTableBody(object):
 
         npoints = fth.points_length
 
+        if fth.instances_length > 0:
+            npoints = fth.instances_length
+
         # extract positions
         pos_size = fth.positions_dtype.itemsize
         pos_offset = fth.positions_offset
         b.positions_arr = array[pos_offset:pos_offset + npoints * pos_size]
         b.positions_itemsize = pos_size
+        #
+        # res_arr = []
+        # for i in range(0, len(b.positions_arr), 12):
+        #     res_arr.append(b.positions_arr[i])
+        #     res_arr.append(b.positions_arr[i+1])
+        #     res_arr.append(b.positions_arr[i+2])
+        #     res_arr.append(b.positions_arr[i+3])
+        #     res_arr.append(b.positions_arr[i+4])
+        #     res_arr.append(b.positions_arr[i+5])
+        #     res_arr.append(b.positions_arr[i+6])
+        #     res_arr.append(b.positions_arr[i+7])
+        #     res_arr.append(b.positions_arr[i+8])
+        #
+        # b.positions_arr = np.array(res_arr, dtype=np.uint8)
 
         # extract colors
         if fth.colors != SemanticPoint.NONE:
